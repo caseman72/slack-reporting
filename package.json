@@ -1,0 +1,22 @@
+{
+  "name": "slack-reporting",
+  "version": "0.1.0",
+  "description": "Slack reporting script.",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "cmanion@walmartlabs.com"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "json5": "^0.4.0",
+    "request": "^2.67.0",
+    "runsync": "^0.1.8"
+  },
+  "bin": {
+    "slack-standup": "index.js"
+  }
+}
