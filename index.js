@@ -60,13 +60,26 @@ var app = {
 
 if (isDefined(argv.daily)) {
   if (!isDefined(argv.date)) {
-    argv.date = dt.dates[2].yyyy_mm_dd;
+    if (argv.daily !== true && /^\d{4}\-\d{1,2}\-\d{1,2}$/.test(argv.daily)) {
+      argv.date = argv.daily;
+      argv.daily = true;
+    }
+    else {
+      argv.date = dt.dates[0].yyyy_mm_dd;
+    }
   }
   app.daily(argv);
 }
+
 if (isDefined(argv.history)) {
   if (!isDefined(argv.date)) {
-    argv.date = dt.dates[2].yyyy_mm_dd;
+    if (argv.history !== true && /^\d{4}\-\d{1,2}\-\d{1,2}$/.test(argv.history)) {
+      argv.date = argv.history;
+      argv.history = true;
+    }
+    else {
+      argv.date = dt.dates[0].yyyy_mm_dd;
+    }
   }
   app.history(argv);
 }
@@ -74,9 +87,11 @@ if (isDefined(argv.history)) {
 if (isDefined(argv.room)) {
   app.room(argv);
 }
+
 if (isDefined(argv.users)) {
   app.users(argv);
 }
+
 if (isDefined(argv.slackrc)) {
   app.slackrc(argv);
 }
