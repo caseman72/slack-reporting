@@ -38,11 +38,11 @@ var app = {
   },
   slackrc: function(argv) {
     slack_utils.slackrc(argv.slackrc, function(slackrc) {
-      console.log('"reporting": {');
-      console.log('  "channel": "{channel}",'.format(slackrc));
-      console.log('  "room_id": "{room_id}",'.format(slackrc));
-      console.log('  "members": ', JSON.stringify(slackrc.members, null, 6));
-      console.log("}");
+      var prefs = Object.assign({},
+        config.prefs,
+        {reporting: slackrc}
+      );
+      console.log( JSON.stringify(prefs, null, 2) );
     });
   },
   history: function(argv) {

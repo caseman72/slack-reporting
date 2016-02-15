@@ -43,14 +43,19 @@ https://api.slack.com/web
       {
           "slack_token": "xxxx-DDDDDDDDDD-DDDDDDDDDDD-DDDDDDDDDDD-yyyyyyyyyy",
           "reporting": {
+            "channel": "#general",
+            "room_id": "",
+            "members": {}
           }
       }
     $ cd /path/to/slack-reporting
     $ npm install
-    $ node index.js
+    $ node index.js -s "#channel" > ~/new-slackrc.json
+    $ vim ~/new-slackrc.json  \[Note: change report to false for non-active members\]
 
 
 Usage:
 
     $ node index.js
+
 
