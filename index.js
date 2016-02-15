@@ -1,10 +1,96 @@
 #!/usr/bin/env node
 "use strict"
 
-var fs = require("fs");
-var util = require("util");
+require("string-utils-cwm");
+require("./lib/object-assign");
+
 var config = require("./lib/config.js"); // blocking lib
+
+var dt = require("./lib/date-utils");
+
+var argv = require("yargs").
+  alias({
+    "r" : "room",
+    "s" : "slackrc",
+    "h" : "history",
+    "d" : "daily",
+    "u" : "user",
+  }).
+  argv;
+
+//console.log( argv );
+
+
+var isDefined = require("./lib/utils").isDefined;
+var SlackUtils = require("./lib/slack-utils");
+var slack_utils = new SlackUtils(config);
+
+var app = {
+  room: function(argv) {
+    slack_utils.find_room(argv.room, function(room) {
+      console.log( JSON.stringify(room, null, 2) );
+    })
+  },
+  users: function(argv) {
+    slack_utils.find_members(argv.users, function(users) {
+      console.log( JSON.stringify(users, null, 2) );
+    })
+  },
+  slackrc: function(argv) {
+    slack_utils.slackrc(argv.slackrc, function(slackrc) {
+      console.log('"reporting": {');
+      console.log('  "channel": "{channel}",'.format(slackrc));
+      console.log('  "room_id": "{room_id}",'.format(slackrc));
+      console.log('  "members": ', JSON.stringify(slackrc.members, null, 6));
+      console.log("}");
+    });
+  },
+  history: function(argv) {
+    slack_utils.history(argv.history, argv.date, function(history) {
+      console.log( JSON.stringify(history, null, 2) );
+    });
+  },
+  daily: function(argv) {
+    slack_utils.daily(argv.daily, argv.date, function(daily) {
+      console.log( JSON.stringify(daily, null, 2) );
+    });
+  }
+};
+
+
+if (isDefined(argv.daily)) {
+  if (!isDefined(argv.date)) {
+    argv.date = dt.dates[2].yyyy_mm_dd;
+  }
+  app.daily(argv);
+}
+if (isDefined(argv.history)) {
+  if (!isDefined(argv.date)) {
+    argv.date = dt.dates[2].yyyy_mm_dd;
+  }
+  app.history(argv);
+}
+
+if (isDefined(argv.room)) {
+  app.room(argv);
+}
+if (isDefined(argv.users)) {
+  app.users(argv);
+}
+if (isDefined(argv.slackrc)) {
+  app.slackrc(argv);
+}
+
+
+/*
+process.exit(0);
+
+
+
+var fs = require("fs");
+
 var JSON5 = require("json5");
+var util = require("util");
 
 // clean healpers
 //
@@ -142,7 +228,7 @@ else {
 }
 
 // do it
-_.post(post_url, {form: new_standup}, function(err, resp, body) {
+_.post(post_url, {form: new_standup}, function(err_not_used, resp_not_used, body) {
   var response_json = JSON.parse(body);
   if (response_json.ok) {
     if (standup_json.live) {
@@ -162,3 +248,4 @@ _.post(post_url, {form: new_standup}, function(err, resp, body) {
     }
   }
 });
+*/

@@ -14,7 +14,9 @@
   "dependencies": {
     "json5": "^0.4.0",
     "request": "^2.67.0",
-    "runsync": "^0.1.8"
+    "runsync": "^0.1.8",
+    "string-utils-cwm": "~0.1.4",
+    "yargs": "~3.32.0"
   },
   "bin": {
     "slack-standup": "index.js"
