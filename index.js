@@ -15,11 +15,13 @@ var slack_utils = new SlackUtils(Config);
 
 var argv = require("yargs").
   alias({
+    "w"    : "weekly",  // weekly report
     "d"    : "daily",   // daily report
     "hist" : "history", // full daily json
     "rc"   : "slackrc", // generate slackrc
     "room" : "room",    // find channel
     "users": "users",   // find members of a channel
+    "u"    : "user"
   }).
   argv;
 
@@ -32,7 +34,7 @@ var Log = function() {
   else {
     console.log.apply(null, arguments);
   }
-}
+};
 
 var app = {
   room: function(argv) {
@@ -59,13 +61,42 @@ var app = {
       Log( JSON.stringify(history, null, 2) );
     });
   },
-  daily: function(argv) {
-    slack_utils.daily(argv.daily, argv.date, function(payload, members, parse_today, parse_blockers) {
+  weekly: function(argv) {
+    var i = 0;
+    var dates = [];
+
+    while (dates.length < 6) {
+      var dt = Dt.dates[i];
+      !dt.is_weekend && dates.push(dt.yyyy_mm_dd);
+      i++;
+    };
+
+    // async hell
+    var self = this;
+    self.daily({daily: argv.weekly, date: dates[0], user: argv.user}, function() {
+      self.daily({daily: argv.weekly, date: dates[1], user: argv.user}, function() {
+        self.daily({daily: argv.weekly, date: dates[2], user: argv.user}, function() {
+          self.daily({daily: argv.weekly, date: dates[3], user: argv.user}, function() {
+            self.daily({daily: argv.weekly, date: dates[4], user: argv.user}, function() {
+              self.daily({daily: argv.weekly, date: dates[5], user: argv.user}, function() {
+              })
+            })
+          })
+        })
+      })
+    });
+  },
+  daily: function(argv, callback) {
+    var check_id = function(user) {
+      return user === this.handle || user === this.id || user === this.email || "@{0}".format(user) === this.handle;
+    };
+
+    slack_utils.daily(argv.daily, argv.date, function(payload, members_not_used, parse_today, parse_blockers) {
       if (payload && payload.ok && payload.messages && payload.messages.length) {
         var reporting_members = {};
         Object.keys(Config.members).forEach(function(key) {
           if (Config.members[key].report) {
-            reporting_members[key] = Object.assign({}, Config.members[key], {reported: false});
+            reporting_members[key] = Object.assign({}, Config.members[key], {id: key, reported: false, check_id: check_id});
           }
         });
 
@@ -75,11 +106,18 @@ var app = {
             var today = parse_today(message.attachments);
             var blockers = parse_blockers(message.attachments);
 
-            Log(Dt.h_mm_ampm(+message.ts), "-", m.handle, "<{0}>".format(m.real_name || m.email))
-            Log(today.join("\n"));
-            blockers.length && Log(Colors.red("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"));
-            blockers.length && Log(Colors.red(blockers.join("\n")));
-            Log("");
+            if (!argv.user || m.check_id(argv.user)) {
+              if (argv.user) {
+                Log(Dt.yyyy_mm_dd(+message.ts), Dt.h_mm_ampm(+message.ts), "-", m.handle, "<{0}>".format(m.real_name || m.email))
+              }
+              else {
+                Log(Dt.h_mm_ampm(+message.ts), "-", m.handle, "<{0}>".format(m.real_name || m.email))
+              }
+              Log(today.join("\n"));
+              blockers.length && Log(Colors.red("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"));
+              blockers.length && Log(Colors.red(blockers.join("\n")));
+              Log("");
+            }
 
             m.reported = true;
           }
@@ -90,21 +128,27 @@ var app = {
           if (isDefined(m) && !m.reported && /Update.*\n/i.test(message.text)) {
             var today = message.text.split(/\n/g);
 
-            Log(m.handle, "<{0}>".format(m.real_name || m.email))
-            Log(today.join("\n"));
-            Log("");
+            if (!argv.user || m.check_id(argv.user)) {
+              Log(m.handle, "<{0}>".format(m.real_name || m.email))
+              Log(today.join("\n"));
+              Log("");
+            }
 
             m.reported = true;
           }
         });
 
-        Log("Not Reported:");
-        Object.keys(reporting_members).forEach(function(key) {
-          var m = reporting_members[key];
-          if (!m.reported) {
-            Log(" ", m.handle, "<{0}>".format(m.real_name || m.email))
-          }
-        });
+        if (!argv.user) {
+          Log("Not Reported:");
+          Object.keys(reporting_members).forEach(function(key) {
+            var m = reporting_members[key];
+            if (!m.reported) {
+              Log(" ", m.handle, "<{0}>".format(m.real_name || m.email))
+            }
+          });
+        }
+
+        callback()
       }
     });
   }
@@ -114,13 +158,21 @@ var app = {
 //
 // main
 //
+//
 
+if (isDefined(argv.weekly)) {
+  if (!isDefined(argv.user)) {
+    throw new Error("Error: need user for weekly report.");
+  }
+  app.weekly(argv);
+}
+
+var re_date = /^\d{4}\-\d{1,2}\-\d{1,2}$/;
 
 if (isDefined(argv.daily)) {
   if (!isDefined(argv.date)) {
-    if (argv.daily !== true && /^\d{4}\-\d{1,2}\-\d{1,2}$/.test(argv.daily)) {
-      argv.date = argv.daily;
-      argv.daily = true;
+    if (re_date.test(argv.daily)) {
+      argv.date = argv.daily, argv.daily = true;
     }
     else {
       argv.date = Dt.dates[0].yyyy_mm_dd;
@@ -131,9 +183,8 @@ if (isDefined(argv.daily)) {
 
 if (isDefined(argv.history)) {
   if (!isDefined(argv.date)) {
-    if (argv.history !== true && /^\d{4}\-\d{1,2}\-\d{1,2}$/.test(argv.history)) {
-      argv.date = argv.history;
-      argv.history = true;
+    if (re_date.test(argv.history)) {
+      argv.date = argv.history, argv.history = true;
     }
     else {
       argv.date = Dt.dates[0].yyyy_mm_dd;
