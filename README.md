@@ -57,5 +57,43 @@ https://api.slack.com/web
 Usage:
 
     $ node index.js
+    $ node index.js --help
+    $ node index.js -h
+    >
+    > Shows this message
+    >
 
+    $ node index --room #sams-ui-status
+    >
+    > Displays JSON object of room (from channel.list)
+    >
 
+    $ node index --users U024L5T1F,U024LTMR9
+    >
+    > Displays JSON object of user objects (from users.list)
+    >
+
+    $ node index --slackrc #sams-ui-status
+    >
+    > Displays JSON to replace current .slackrc.json
+    >
+
+    $ node index --history #sams-ui-status --date 2016-02-01
+    >
+    > Displays JSON object of the channel's history (from channels.history)
+    >
+
+    $ node index --daily #sams-ui-status --date 2016-02-01
+    $ node index -d 2016-02-01
+    $ node index -d
+    >
+    > Displays daily report summary
+    >
+
+    $ node index --weekly #sams-ui-status --user @casey
+    $ node index -wu @casey
+    >
+    > Displays weekly report summary for user
+    >
+    > Note: user's report property needs to be true in slackrc
+    >

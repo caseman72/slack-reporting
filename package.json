@@ -1,11 +1,12 @@
 {
   "name": "slack-reporting",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Slack reporting script.",
   "main": "index.js",
   "scripts": {
-    "run": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "help"   : "node index.js -h",
+    "slackrc": "node index.js --slackrc",
+    "daily"  : "node index.js -d"
   },
   "author": {
     "name": "cmanion@walmartlabs.com"

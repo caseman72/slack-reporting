@@ -21,7 +21,8 @@ var argv = require("yargs").
     "rc"   : "slackrc", // generate slackrc
     "room" : "room",    // find channel
     "users": "users",   // find members of a channel
-    "u"    : "user"
+    "u"    : "user",
+    "h"    : "help"
   }).
   argv;
 
@@ -43,7 +44,7 @@ var app = {
     })
   },
   users: function(argv) {
-    slack_utils.find_members(argv.users, function(users) {
+    slack_utils.find_users(argv.users, function(users) {
       Log( JSON.stringify(users, null, 2) );
     })
   },
@@ -146,11 +147,59 @@ var app = {
               Log(" ", m.handle, "<{0}>".format(m.real_name || m.email))
             }
           });
+          Log("");
         }
 
-        callback()
+        isDefined(callback) && callback()
       }
     });
+  },
+  help: function(/* argv */) {
+    console.log([
+      "Usage:",
+      Colors.blue("  $ node index.js"),
+      Colors.blue("  $ node index.js --help"),
+      Colors.blue("  $ node index.js -h"),
+      Colors.grey("  >"),
+      Colors.grey("  > Shows this message"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --room #sams-ui-status"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays JSON object of room (from channel.list)"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --users U024L5T1F,U024LTMR9"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays JSON object of user objects (from users.list)"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --slackrc #sams-ui-status"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays JSON to replace current .slackrc.json"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --history #sams-ui-status --date 2016-02-01"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays JSON object of the channel's history (from channels.history)"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --daily #sams-ui-status --date 2016-02-01"),
+      Colors.blue("  $ node index -d 2016-02-01"),
+      Colors.blue("  $ node index -d"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays daily report summary"),
+      Colors.grey("  >"),
+      "",
+      Colors.blue("  $ node index --weekly #sams-ui-status --user @casey"),
+      Colors.blue("  $ node index -wu @casey"),
+      Colors.grey("  >"),
+      Colors.grey("  > Displays weekly report summary for user "),
+      Colors.grey("  >"),
+      Colors.grey("  > Note: user's report property needs to be true in slackrc"),
+      Colors.grey("  >"),
+      ""
+    ].join("\n"));
   }
 };
 
@@ -159,6 +208,7 @@ var app = {
 // main
 //
 //
+
 
 if (isDefined(argv.weekly)) {
   if (!isDefined(argv.user)) {
@@ -203,6 +253,10 @@ if (isDefined(argv.users)) {
 
 if (isDefined(argv.slackrc)) {
   app.slackrc(argv);
+}
+
+if (isDefined(argv.help) || Object.keys(argv).length < 3) {
+  app.help(argv);
 }
 
 
